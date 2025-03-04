@@ -4,6 +4,7 @@ import random
 from typing import List, Dict, DefaultDict
 from gymnasium.spaces import Space
 from gymnasium.spaces.utils import flatdim
+import numpy as np
 
 
 class Agent(ABC):
@@ -54,9 +55,16 @@ class Agent(ABC):
         :return (int): index of selected action
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
+        #if random.random() < self.epsilon:  #using random -> similar result
+        if np.random.rand() < self.epsilon:    #using numpy
+            # Random action (exploration)
+            action = np.random.randint(0, self.n_acts) #using numpy
+            #action = random.randint(0, self.n_acts-1)   #using random -> similar result
+        else:
+            # Greedy action (exploitation)
+            action = np.argmax([self.q_table[(obs, a)] for a in range(self.n_acts)])
         ### RETURN AN ACTION HERE ###
-        return -1
+        return action
 
     @abstractmethod
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
@@ -105,7 +113,9 @@ class QLearningAgent(Agent):
         :return (float): updated Q-value for current observation-action pair
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
+        q_old = self.q_table[(obs, action)]
+        q_max = max([self.q_table[(n_obs, a)] for a in range(self.n_acts)])
+        self.q_table[(obs, action)] = q_old + self.alpha * (reward + self.gamma * q_max - q_old)
         return self.q_table[(obs, action)]
 
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
