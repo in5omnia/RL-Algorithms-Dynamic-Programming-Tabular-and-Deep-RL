@@ -81,7 +81,16 @@ class ValueIteration(MDPSolver):
         """
         V = np.zeros(self.state_dim)
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
+        delta = theta
+        while delta >= theta:
+            delta = 0
+            for s in range(self.state_dim):
+                v = V[s]
+                V[s] = np.max([
+                    self.mdp.P[s, a] @ (self.mdp.R[s, a] + self.gamma * V)
+                    for a in range(self.action_dim)
+                ])
+                delta = np.max([delta, np.abs(v - V[s])])
         return V
 
     def _calc_policy(self, V: np.ndarray) -> np.ndarray:
@@ -103,7 +112,13 @@ class ValueIteration(MDPSolver):
         """
         policy = np.zeros([self.state_dim, self.action_dim])
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
+        for s in range(self.state_dim):  # states
+            best_action = np.argmax([
+                self.mdp.P[s, a] @ (self.mdp.R[s, a] + self.gamma * V)
+                for a in range(self.action_dim)
+            ])
+            # Set the best action to 1 and leave every other action as 0
+            policy[s, best_action] = 1.0
         return policy
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
@@ -149,9 +164,6 @@ class PolicyIteration(MDPSolver):
             It is indexed as (State) where V[State] is the value of state 'State'
         """
         V = np.zeros(self.state_dim)
-        print(f"In PEval")
-        #print(f" sum {[np.sum(policy[s]) for s in range(self.state_dim)]}")
-
         ### PUT YOUR CODE HERE ###
         delta = self.theta
         while delta >= self.theta:
@@ -198,7 +210,6 @@ class PolicyIteration(MDPSolver):
             for s in range(self.state_dim):   #self.mdp.states
                 old_action = np.argmax(policy[s])
                 best_action = np.argmax([
-                    #np.sum(self.mdp.P[s, a]*(self.mdp.R[s, a] + self.gamma*V))
                     self.mdp.P[s, a] @ (self.mdp.R[s, a] + self.gamma * V)
                     for a in range(self.action_dim)
                 ])
@@ -246,13 +257,13 @@ if __name__ == "__main__":
         Transition("land", "jump1", "land", 1, 0),
     )
 
-    #solver = ValueIteration(mdp, CONSTANTS["gamma"])
-    #policy, valuefunc = solver.solve()
-    #print("---Value Iteration---")
-    #print("Policy:")
-    #print(solver.decode_policy(policy))
-    #print("Value Function")
-    #print(valuefunc)
+    solver = ValueIteration(mdp, CONSTANTS["gamma"])
+    policy, valuefunc = solver.solve()
+    print("---Value Iteration---")
+    print("Policy:")
+    print(solver.decode_policy(policy))
+    print("Value Function")
+    print(valuefunc)
 
     solver = PolicyIteration(mdp, CONSTANTS["gamma"])
     policy, valuefunc = solver.solve()
