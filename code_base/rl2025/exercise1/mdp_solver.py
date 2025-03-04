@@ -150,16 +150,16 @@ class PolicyIteration(MDPSolver):
         """
         V = np.zeros(self.state_dim)
         print(f"In PEval")
-        print(f" sum {[np.sum(policy[s]) for s in range(self.state_dim)]}")
+        #print(f" sum {[np.sum(policy[s]) for s in range(self.state_dim)]}")
 
         ### PUT YOUR CODE HERE ###
-        delta = 0
+        delta = self.theta
         while delta >= self.theta:
             delta = 0
             for s in range(self.state_dim):
                 v = V[s]
-                policy_s = policy[s]
-                V[s] = np.sum(self.mdp.P[s, policy_s]*(self.mdp.R[s, policy_s] + self.gamma*V))
+                policy_s = np.argmax(policy[s])
+                V[s] = self.mdp.P[s, policy_s] @ (self.mdp.R[s, policy_s] + self.gamma * V)
                 delta = np.max([delta, np.abs(v - V[s])])
         return np.array(V)
 
@@ -186,8 +186,7 @@ class PolicyIteration(MDPSolver):
         V = np.zeros([self.state_dim])
         ### PUT YOUR CODE HERE ###
         # Initialization
-        policy[:, 0] = 1  # TODO: maybe change to random
-        print(f" sum  of P{[np.sum(self.mdp.P[s, a, :]) for s in range(self.state_dim) for a in range(self.action_dim)]}")
+        policy[:, np.random.randint(0, self.state_dim)] = 1  # TODO: is this okay?
         policy_stable = False
         # until policy is stable:
         while not policy_stable:
@@ -197,19 +196,17 @@ class PolicyIteration(MDPSolver):
             # Policy Improvement
             policy_stable = True
             for s in range(self.state_dim):   #self.mdp.states
-                print(f"PI in state {s}")
                 old_action = np.argmax(policy[s])
                 best_action = np.argmax([
-                    np.sum(self.mdp.P[s, a]*(self.mdp.R[s, a] + self.gamma*V))
+                    #np.sum(self.mdp.P[s, a]*(self.mdp.R[s, a] + self.gamma*V))
+                    self.mdp.P[s, a] @ (self.mdp.R[s, a] + self.gamma * V)
                     for a in range(self.action_dim)
                 ])
-                # Set the best action to 1 and every other action to 0   TODO: is this necessary?
+                # Set the best action to 1 and every other action to 0
                 policy[s] = np.zeros(self.action_dim)
-                policy[s, best_action] = 1.0 #TODO: check if this is correct (am i assigning integer to a row???)
+                policy[s, best_action] = 1.0
                 if old_action != best_action:
                     policy_stable = False
-            if policy_stable:
-                break
         return policy, V
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
