@@ -17,7 +17,7 @@ def question2_1() -> str:
     b) 0.8
     return: (str): your answer as a string. accepted strings: "a" or "b"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a" or "b"
+    answer = "a"  # TYPE YOUR ANSWER HERE "a" or "b"
     return answer
 
 
@@ -29,7 +29,7 @@ def question2_2() -> str:
     b) 0.8
     return: (str): your answer as a string. accepted strings: "a" or "b"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a" or "b"
+    answer = "a"  # TYPE YOUR ANSWER HERE "a" or "b"
     return answer
 
 
@@ -42,7 +42,7 @@ def question2_3() -> str:
     b) Every-Visit Monte Carlo
     return: (str): your answer as a string. accepted strings: "a" or "b"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a" or "b"
+    answer = "b"  # TYPE YOUR ANSWER HERE "a" or "b"
     return answer
 
 
@@ -53,16 +53,17 @@ def question2_4() -> str:
     by [Q-learning / Every-Visit Monte Carlo] when compared to the other algorithm.
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "BECAUSE OF ALPHA? ALPHA REDUCES GAMMA IN Q-LEARNING THEREFORE REDUCING ITS EFFECT?"  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 def question2_5() -> str:
     """
     (Short answer question):
-    Provide a short explanation (<200 words) on the differences between the non-slippery and the slippery varian of the problem for [Q-learning / Every-Visit Monte Carlo].
-    return: answer (str): your answer as a string (200 words max)
+    Provide a short explanation (<100 words) on the differences between the non-slippery and the slippery varian of the problem.
+    by [Q-learning / Every-Visit Monte Carlo].
+    return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (200 words max)
+    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 
@@ -73,7 +74,7 @@ def question2_5() -> str:
 def question3_1() -> str:
     """
     (Multiple choice question):
-    In Reinforce, which learning rate achieves the highest mean returns at the end of training?
+    In the DiscreteRL algorithm, which learning rate achieves the highest mean returns at the end of training?
     a) 2e-2
     b) 2e-3
     c) 2e-4
@@ -184,13 +185,9 @@ def question3_8() -> str:
 
 def question5_1() -> str:
     """
-    Note: This is a bonus question, which can be ignored. If you choose to answer this question, 
-    you should also include the relevant code in the zip file that you submit.
-    (Short answer):
-    Provide a short description (200 words max) describing your approach. State and explain the 
-    problem that you have chosen for this question and describe your answer. 
-    (Long  answer): If you choose to prepare a longer answer, please state here in what form you 
-    are submitting your answer. This can be for example by submission of a PDF or by a link. 
+    (Short answer question):
+    Provide a short description (200 words max) describing your hyperparameter turning and scheduling process to get
+    the best performance of your agents
     return: answer (str): your answer as a string (200 words max)
     """
     answer = ""  # TYPE YOUR ANSWER HERE (200 words max)
