@@ -136,7 +136,7 @@ class DQN(Agent):
         ACTION_SIZE = action_space.n
 
         # ######################################### #
-        #  BUILD YOUR NETWORKS AND OPTIMIZERS HERE  #
+        #  BUILD YOUR NETWORKS AND OPTIMIZERS HERE  # TODO
         # ######################################### #
         self.critics_net = FCNetwork(
             (STATE_SIZE, *hidden_size, ACTION_SIZE), output_activation=None
@@ -149,7 +149,7 @@ class DQN(Agent):
             )
 
         # ############################################# #
-        # WRITE ANY HYPERPARAMETERS YOU MIGHT NEED HERE #
+        # WRITE ANY HYPERPARAMETERS YOU MIGHT NEED HERE # TODO
         # ############################################# #
         self.learning_rate = learning_rate
         self.update_counter = 0
@@ -204,22 +204,22 @@ class DQN(Agent):
         """
 
         def epsilon_linear_decay(*args, **kwargs):
-            ### PUT YOUR CODE HERE ###
+            ### PUT YOUR CODE HERE ### TODO
             raise(NotImplementedError)
 
         def epsilon_exponential_decay(*args, **kwargs):
-            ### PUT YOUR CODE HERE ###
+            ### PUT YOUR CODE HERE ### TODO
             raise(NotImplementedError)
 
         if self.epsilon_decay_strategy == "constant":
             pass
         elif self.epsilon_decay_strategy == "linear":
             # linear decay
-            ### PUT YOUR CODE HERE ###
+            ### PUT YOUR CODE HERE ### TODO
             self.epsilon = epsilon_linear_decay(...)
         elif self.epsilon_decay_strategy == "exponential":
             # exponential decay
-            ### PUT YOUR CODE HERE ###
+            ### PUT YOUR CODE HERE ### TODO
             self.epsilon = epsilon_exponential_decay(...)
         else:
             raise ValueError("epsilon_decay_strategy must be either 'constant', 'linear' or 'exponential'")
@@ -237,8 +237,19 @@ class DQN(Agent):
         :param explore (bool): flag indicating whether we should explore
         :return (sample from self.action_space): action the agent should perform
         """
-        ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
+        ### PUT YOUR CODE HERE ### TODO
+        #print("ACT")
+        if explore and np.random.rand() < self.epsilon:    #using numpy
+            # Random action (exploration)
+            action = self.action_space.sample()  #TODO: ask André is he also used in this q2
+        else:
+            # Greedy action (exploitation)
+            obs_tensor = torch.tensor(obs, dtype=torch.float32)  # Convert obs to tensor
+            with torch.no_grad():
+                q_values = self.critics_net(obs_tensor)
+            action = torch.argmax(q_values).item()
+
+        return action
 
     def update(self, batch: Transition) -> Dict[str, float]:
         """Update function for DQN
@@ -252,9 +263,35 @@ class DQN(Agent):
         :param batch (Transition): batch vector from replay buffer
         :return (Dict[str, float]): dictionary mapping from loss names to loss values
         """
-        ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
-        q_loss = 0.0
+        ### PUT YOUR CODE HERE ### TODO
+        states = batch.states
+        actions = batch.actions.long()
+        next_states = batch.next_states
+        rewards = batch.rewards.view(64)
+        done = batch.done.view(64)
+        # Get target Q-values for the next states using the target network
+        with torch.no_grad():
+            next_q_values = self.critics_target(next_states)
+        targets = rewards + (1 - done) * self.gamma * torch.max(next_q_values, dim=1)[0]
+
+
+        # Get Q-values for the current states and the actions taken using the main network
+        q_values = self.critics_net(states).gather(1, actions.view(-1, 1)).squeeze(-1)
+        # Compute the loss
+        q_loss = torch.nn.functional.mse_loss(q_values, targets)
+        # Backpropagation
+        self.critics_optim.zero_grad()    # Reset previous gradients to 0
+        q_loss.backward()                 # Backpropagate the loss
+        self.critics_optim.step()         # Gradient descent step (updates the parameters)
+
+        # Update the target network
+        if self.update_counter % self.target_update_freq == 0:
+            self.critics_target.hard_update(self.critics_net)
+
+        # Increment the update counter
+        self.update_counter += 1
+        q_loss = q_loss.item()
+
         return {"q_loss": q_loss}
 
 
