@@ -204,23 +204,41 @@ class DQN(Agent):
         """
 
         def epsilon_linear_decay(*args, **kwargs):
-            ### PUT YOUR CODE HERE ### TODO
-            raise(NotImplementedError)
+            ### PUT YOUR CODE HERE ###
+            if self.epsilon > self.epsilon_min:
+                # Linear decay: epsilon = m * current_timestep + b
+                current_t = args[0]
+                max_t = args[1]
+                m = (self.epsilon_min - self.epsilon_start) / (self.exploration_fraction * max_t)
+                b = self.epsilon_start
+                return m * current_t + b
+            else: # constant after reaching epsilon_min
+                return self.epsilon_min
 
         def epsilon_exponential_decay(*args, **kwargs):
-            ### PUT YOUR CODE HERE ### TODO
-            raise(NotImplementedError)
+            ### PUT YOUR CODE HERE ###
+            if self.epsilon > self.epsilon_min:
+                # Exponential Decay: epsilon_t+1 = r^(t/T) * epsilon_t
+                current_t = args[0]
+                max_t = args[1]
+                r_expon = self.epsilon_exponential_decay_factor ** (current_t / max_t)
+                epsilon_next_t = r_expon * self.epsilon
+                if epsilon_next_t >= self.epsilon_min:
+                    return r_expon * self.epsilon
+            # constant after reaching epsilon_min
+            return self.epsilon_min
+
 
         if self.epsilon_decay_strategy == "constant":
             pass
         elif self.epsilon_decay_strategy == "linear":
             # linear decay
             ### PUT YOUR CODE HERE ### TODO
-            self.epsilon = epsilon_linear_decay(...)
+            self.epsilon = epsilon_linear_decay(timestep, max_timestep)
         elif self.epsilon_decay_strategy == "exponential":
             # exponential decay
             ### PUT YOUR CODE HERE ### TODO
-            self.epsilon = epsilon_exponential_decay(...)
+            self.epsilon = epsilon_exponential_decay(timestep, max_timestep)
         else:
             raise ValueError("epsilon_decay_strategy must be either 'constant', 'linear' or 'exponential'")
 
@@ -237,7 +255,7 @@ class DQN(Agent):
         :param explore (bool): flag indicating whether we should explore
         :return (sample from self.action_space): action the agent should perform
         """
-        ### PUT YOUR CODE HERE ### TODO
+        ### PUT YOUR CODE HERE ###
         #print("ACT")
         if explore and np.random.rand() < self.epsilon:    #using numpy
             # Random action (exploration)
@@ -263,7 +281,7 @@ class DQN(Agent):
         :param batch (Transition): batch vector from replay buffer
         :return (Dict[str, float]): dictionary mapping from loss names to loss values
         """
-        ### PUT YOUR CODE HERE ### TODO
+        ### PUT YOUR CODE HERE ###
         states = batch.states
         actions = batch.actions.long()
         next_states = batch.next_states
