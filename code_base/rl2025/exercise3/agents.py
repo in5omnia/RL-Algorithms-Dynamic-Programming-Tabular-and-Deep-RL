@@ -314,159 +314,137 @@ class DQN(Agent):
 
 
 class DiscreteRL(Agent):
-    """ The DiscreteRL Agent for Ex 3 
-    """
+    """The DiscreteRL Agent for Ex 3 using tabular Q-Learning without neural networks
 
-    def __init__(self, alpha: float, **kwargs):
-        """Constructor of QLearningAgent
+    This agent implements standard Q-learning with a discretized state space for
+    environments with continuous state spaces. Suitable for small state-action spaces.
 
-        Initializes some variables of the Q-Learning agent, namely the epsilon, discount rate
-        and learning rate alpha.
+    :attr gamma (float): discount factor for future rewards
+    :attr epsilon (float): probability of choosing a random action for exploration
+    :attr alpha (float): learning rate for Q-value updates
+    :attr n_acts (int): number of possible actions in the environment
+    :attr q_table (DefaultDict): table storing Q-values for state-action pairs
+    :attr position_bins (np.ndarray): bins for discretizing position dimension
+    :attr velocity_bins (np.ndarray): bins for discretizing velocity dimension
 
-        :param alpha (float): learning rate alpha for Q-learning updates
-        """
+        ** YOU CAN CHANGE THE PROVIDED SETTINGS **
 
-        super().__init__(**kwargs)
-        self.alpha: float = alpha
-
-    def learn(
-        self, obs: int, action: int, reward: float, n_obs: int, done: bool
-    ) -> float:
-        """Updates the Q-table based on agent experience
-
-        ** YOU NEED TO IMPLEMENT THIS FUNCTION FOR Q3 BUT YOU CAN REUSE YOUR Q LEARNING CODE FROM Q2 **
-
-                :param obs (int): received observation representing the current environmental state
-        :param action (int): index of applied action
-        :param reward (float): received reward
-        :param n_obs (int): received observation representing the next environmental state
-        :param done (bool): flag indicating whether a terminal state has been reached
-        :return (float): updated Q-value for current observation-action pair
-        """
-        ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
-        return self.q_table[(obs, action)]
-
-    def schedule_hyperparameters(self, timestep: int, max_timestep: int):
-        """Updates the hyperparameters
-
-        ** YOU CAN CHANGE THE PROVIDED SCHEDULING **
-
-        This function is called before every episode and allows you to schedule your
-        hyperparameters.
-
-        :param timestep (int): current timestep at the beginning of the episode
-        :param max_timestep (int): maximum timesteps that the training loop will run for
-        """
-        self.epsilon = 1.0 - (min(1.0, timestep / (0.20 * max_timestep))) * 0.99
-
-
-    """
-    ** YOU NEED TO IMPLEMENT THE FUNCTIONS IN THIS CLASS BASED ON YOUR WORK FOR EX 2**
-
-    :attr policy (FCNetwork): fully connected network for policy
-    :attr policy_optim (torch.optim): PyTorch optimiser for policy network
-    :attr learning_rate (float): learning rate for DQN optimisation
-    :attr gamma (float): discount rate gamma
     """
 
     def __init__(
-        self,
-        action_space: gym.Space,
-        observation_space: gym.Space,
-        learning_rate: float,
-        hidden_size: Iterable[int],
-        gamma: float,
-        **kwargs,
-        ):
-        """
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q3**
+            self,
+            action_space: gym.Space,
+            observation_space: gym.Space,
+            gamma: float = 0.99,
+            epsilon: float = 0.99,
+            alpha: float = 0.05,
+            **kwargs
+    ):
+        """Constructor of DiscreteRL agent
 
         :param action_space (gym.Space): environment's action space
         :param observation_space (gym.Space): environment's observation space
-        :param learning_rate (float): learning rate for DQN optimisation
-        :param hidden_size (Iterable[int]): list of hidden dimensionalities for fully connected DQNs
-        :param gamma (float): discount rate gamma
+        :param gamma (float): discount factor gamma
+        :param epsilon (float): epsilon for epsilon-greedy action selection
+        :param alpha (float): learning rate alpha
         """
-        super().__init__(action_space, observation_space)
-        STATE_SIZE = observation_space.shape[0]
-        ACTION_SIZE = action_space.n
+        self.gamma: float = gamma
+        self.epsilon: float = epsilon
+        self.alpha: float = alpha
+        self.n_acts: int = action_space.n
 
-        # ######################################### #
-        #  BUILD YOUR NETWORKS AND OPTIMIZERS HERE  #
-        # ######################################### #
-        self.policy = FCNetwork(
-            (STATE_SIZE, *hidden_size, ACTION_SIZE), output_activation=torch.nn.modules.activation.Softmax
-            )
+        super().__init__(action_space=action_space, observation_space=observation_space)
 
-        self.policy_optim = Adam(self.policy.parameters(), lr=learning_rate, eps=1e-3)
+        # Initialize Q-table as defaultdict with default value of 0 for any new state-action pair
+        # This avoids having to initialize all possible state-action pairs explicitly
+        self.q_table: DefaultDict = defaultdict(lambda: 0)
 
-        # ############################################# #
-        # WRITE ANY HYPERPARAMETERS YOU MIGHT NEED HERE #
-        # ############################################# #
-        self.learning_rate = learning_rate
-        self.gamma = gamma
+        # For mountain car environment discretization - creates k bins for each dimension, e.g. k=8
+        # Position range: -1.2 to 0.6 (8 bins)
+        self.position_bins = np.linspace(-1.2, 0.6, k)
+        # Velocity range: -0.07 to 0.07 (8 bins)
+        self.velocity_bins = np.linspace(-0.07, 0.07, k)
 
-        # ############################### #
-        # WRITE ANY AGENT PARAMETERS HERE #
-        # ############################### #
+    def discretize_state(self, obs: np.ndarray) -> int:
+        """Discretizes a continuous state observation into a unique integer identifier.
 
-        # ###############################################
-        self.saveables.update(
-            {
-                "policy": self.policy,
-                }
-            )
+        Converts continuous observation values into discrete bins and creates
+        a unique integer identifier for the discretized state.
 
-    def schedule_hyperparameters(self, timestep: int, max_timesteps: int):
-        """Updates the hyperparameters
+        :param obs (np.ndarray): continuous state observation (position, velocity)
+        :return (int): unique integer identifier for the discretized state
+        """
+        # Convert continuous position to discrete bin index
+        position_idx = np.digitize(obs[0], self.position_bins) - 1
 
-        This function is called before every episode and allows you to schedule your
-        hyperparameters.
+        # Convert continuous velocity to discrete bin index
+        velocity_idx = np.digitize(obs[1], self.velocity_bins) - 1
+
+        # Create a unique integer ID by combining position and velocity indices
+        # This creates a unique ID for each discretized state using a simple hash function
+        unique_state_id = position_idx * len(self.velocity_bins) + velocity_idx
+        return unique_state_id
+
+
+    def act(self, obs: np.ndarray, explore: bool = True) -> int:
+        """Returns an action using epsilon-greedy action selection.
+
+        With probability epsilon, selects a random action for exploration.
+        Otherwise, selects the action with the highest Q-value for the current state.
+
+        :param obs (np.ndarray): current observation state
+        :param explore (bool): flag indicating whether exploration should be enabled
+        :return (int): action the agent should perform (index from action space)
+        """
+        # Discretize the observation
+        state = self.discretize_state(obs)
+
+        # Epsilon-greedy action selection
+        if explore and np.random.random() < self.epsilon:
+            return self.action_space.sample()
+        else:
+            # Get Q-values for all actions in current state
+            q_values = [self.q_table[(state, a)] for a in range(self.n_acts)]
+            # Return action with highest Q-value (randomly break ties)
+            return np.random.choice(np.flatnonzero(q_values == np.max(q_values)))
+
+    def update(
+            self, obs: np.ndarray, action: int, reward: float, n_obs: np.ndarray, done: bool
+    ) -> float:
+        """Updates the Q-table based on agent experience using Q-learning algorithm.
+
+         ** YOU NEED TO IMPLEMENT THIS FUNCTION FOR Q3 BUT YOU CAN REUSE YOUR Q LEARNING CODE FROM Q2 (you can include it here or you adapt the files from Q2 to work of the mountain car problem **
+
+        Implements the Q-learning update equation:
+        Q(s,a) = Q(s,a) + alpha * (r + gamma * max_a' Q(s',a') - Q(s,a))
+
+        :param obs (np.ndarray): current observation state
+        :param action (int): applied action
+        :param reward (float): received reward
+        :param n_obs (np.ndarray): next observation state
+        :param done (bool): flag indicating whether episode is done
+        :return (float): updated Q-value for current observation-action pair
+        """
+
+        # Convert continuous observations to discrete state identifiers
+        state = self.discretize_state(obs)  # Current state
+        next_state = self.discretize_state(n_obs)  # Next state
+
+        ### PUT YOUR CODE HERE ###
+
+        return {f"Q_value_{state}": self.q_table[(state, action)]}
+
+    def schedule_hyperparameters(self, timestep: int, max_timestep: int):
+        """Updates the hyperparameters (specifically epsilon for exploration).
+
+        ** YOU CAN CHANGE THE PROVIDED SCHEDULING **
+
+        Implements a linear decay schedule for epsilon, reducing from 1.0 to 0.01
+        over the first 20% of total timesteps.
 
         :param timestep (int): current timestep at the beginning of the episode
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
-        pass
+        decay_progress = min(1.0, timestep / (0.20 * max_timestep))
+        self.epsilon = 1.0 - decay_progress * 0.99  # Decays from 1.0 to 0.01
 
-    def act(self, obs: np.ndarray, explore: bool):
-        """Returns an action (should be called at every timestep)
-
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q3**
-        
-        :param obs (np.ndarray): observation vector from the environment
-        :param explore (bool): flag indicating whether we should explore
-        :return (sample from self.action_space): action the agent should perform
-
-        ** For the discrete case you would discetise the observations **
-
-        Mountain car: e.g. 8x8 over (-0.6,1.2)x(-0.07,0.07)
-
-        For cartpole (not required here!) the actions are F=+10, F=0, or F=-10 and there are
-        N=162=3*3*6*3 states which are derived from the 4D continuous state space by the following conditions:
-        cart position: x <= -0.8 | -0.8 < x <= 0.8 | 0.8 < x
-        cart velocity: x-dot <= -0.5 | -0.5< x-dot <= 0.5 | 0.5 < x-dot
-        pole angle: theta <= -0.105 | -0.105 < theta <= -0.0175) | -0.0175 < theta <= 0.0) 
-        | 0.0 < theta <= 0.0175) | 0.0175 < theta <= 0.105) | 0.105 < theta
-        pole angular velocity: theta-dot <= -0.872 | -0.872 < theta-dot <= 0.872 | 0.872 < theta-dot 
-        """
-        ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
-
-    def update(
-        self, rewards: List[float], observations: List[np.ndarray], actions: List[int],
-        ) -> Dict[str, float]:
-        """Update function for policy gradients
-
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q3**
-
-        :param rewards (List[float]): rewards of episode (from first to last)
-        :param observations (List[np.ndarray]): observations of episode (from first to last)
-        :param actions (List[int]): applied actions of episode (from first to last)
-        :return (Dict[str, float]): dictionary mapping from loss names to loss values
-            losses
-        """
-        ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
-        p_loss = 0.0
-        return {"p_loss": p_loss}

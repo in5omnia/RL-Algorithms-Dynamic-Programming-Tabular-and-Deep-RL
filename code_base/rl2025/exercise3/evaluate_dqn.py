@@ -59,7 +59,8 @@ if __name__ == "__main__":
     else:
         raise(ValueError(f"Unknown environment {ENV}"))
 
-    env = gym.make(CONFIG["env"])
+    CONFIG["render"] = True  # Ensure render is enabled
+    env = gym.make(CONFIG["env"], render_mode="rgb_array")
     results = pickle.load(open(SWEEP_RESULTS_FILE, 'rb'))
     best_run, best_run_filename = get_best_saved_run(results)
     print(f"Best run was {best_run_filename}")
