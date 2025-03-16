@@ -1,13 +1,16 @@
+from typing import DefaultDict, Dict, Iterable, List
+from collections import defaultdict
 from abc import ABC, abstractmethod
 from copy import deepcopy
+import os.path
+
 import gymnasium as gym
 import numpy as np
-import os.path
+import torch
 from torch import Tensor
 from torch.distributions.categorical import Categorical
 import torch.nn
 from torch.optim import Adam
-from typing import Dict, Iterable, List
 
 from rl2025.exercise3.networks import FCNetwork
 from rl2025.exercise3.replay import Transition
@@ -265,7 +268,9 @@ class DQN(Agent):
             obs_tensor = torch.tensor(obs, dtype=torch.float32)  # Convert obs to tensor
             with torch.no_grad():
                 q_values = self.critics_net(obs_tensor)
-            action = torch.argmax(q_values).item()
+
+            #action = torch.argmax(q_values).item()
+            action = torch.choice(torch.nonzero(q_values == torch.max(q_values)).squeeze()).item()
 
         return action
 
@@ -431,6 +436,10 @@ class DiscreteRL(Agent):
         next_state = self.discretize_state(n_obs)  # Next state
 
         ### PUT YOUR CODE HERE ###
+        q_old = self.q_table[(state, action)]
+        q_max = max([self.q_table[(next_state, a)] for a in range(self.n_acts)])
+        self.q_table[(state, action)] = q_old + self.alpha * (reward + self.gamma * q_max - q_old)
+        return self.q_table[(state, action)]
 
         return {f"Q_value_{state}": self.q_table[(state, action)]}
 
