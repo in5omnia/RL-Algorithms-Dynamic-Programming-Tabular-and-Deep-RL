@@ -269,9 +269,7 @@ class DQN(Agent):
             with torch.no_grad():
                 q_values = self.critics_net(obs_tensor)
 
-            #action = torch.argmax(q_values).item()
-            action = torch.choice(torch.nonzero(q_values == torch.max(q_values)).squeeze()).item()
-
+            action = torch.argmax(q_values).item()
         return action
 
     def update(self, batch: Transition) -> Dict[str, float]:
@@ -365,6 +363,7 @@ class DiscreteRL(Agent):
         self.q_table: DefaultDict = defaultdict(lambda: 0)
 
         # For mountain car environment discretization - creates k bins for each dimension, e.g. k=8
+        k=8
         # Position range: -1.2 to 0.6 (8 bins)
         self.position_bins = np.linspace(-1.2, 0.6, k)
         # Velocity range: -0.07 to 0.07 (8 bins)

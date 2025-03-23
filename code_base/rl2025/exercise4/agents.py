@@ -228,8 +228,7 @@ class DDPG(Agent):
 
         # Update actor policy
         actions_for_grad = self.actor(states)
-        with torch.no_grad():
-            q_values_for_grad = self.critic(torch.cat((states, actions_for_grad), dim=1))
+        q_values_for_grad = self.critic(torch.cat((states, actions_for_grad), dim=1))
         policy_gradient_error = -q_values_for_grad.mean()
         # Backpropagation
         self.policy_optim.zero_grad()  # Reset previous gradients to 0
