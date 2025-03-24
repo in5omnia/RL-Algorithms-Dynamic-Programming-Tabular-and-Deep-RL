@@ -15,6 +15,7 @@ from torch.optim import Adam
 from rl2025.exercise3.networks import FCNetwork
 from rl2025.exercise3.replay import Transition
 
+
 class Agent(ABC):
     """Base class for Deep RL Exercise 3 Agents
 
@@ -205,54 +206,42 @@ class DQN(Agent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
 
-        def epsilon_linear_decay(timestep, max_timestep, epsilon_start, epsilon_min, exploration_fraction, cur_epsilon):
-            """Linear epsilon decay strategy
-            
-            Linearly decays epsilon from epsilon_start to epsilon_min based on the exploration_fraction
-            """
+        def epsilon_linear_decay(*args, **kwargs):
             ### PUT YOUR CODE HERE ###
-            if cur_epsilon > epsilon_min:  # calculate only if epsilon hasn't reached epsilon_min
+            if self.epsilon > self.epsilon_min:
                 # Linear decay: epsilon = m * current_timestep + b
-                m = (epsilon_min - epsilon_start) / (exploration_fraction * max_timestep)
-                b = epsilon_start
-                return max(m * timestep + b, epsilon_min)   # constant after reaching epsilon_min
-            return epsilon_min
+                current_t = args[0]
+                max_t = args[1]
+                m = (self.epsilon_min - self.epsilon_start) / (self.exploration_fraction * max_t)
+                b = self.epsilon_start
+                return m * current_t + b
+            else: # constant after reaching epsilon_min
+                return self.epsilon_min
 
-
-        def epsilon_exponential_decay(timestep, max_timestep, epsilon_min, decay_factor, cur_epsilon):
-            """Exponential epsilon decay strategy
-            
-            Exponentially decays epsilon from epsilon_start to epsilon_min using decay_factor
-            """
+        def epsilon_exponential_decay(*args, **kwargs):
             ### PUT YOUR CODE HERE ###
-            if cur_epsilon > epsilon_min:  # calculate only if epsilon hasn't reached epsilon_min
+            if self.epsilon > self.epsilon_min:
                 # Exponential Decay: epsilon_t+1 = r^(t/T) * epsilon_t
-                r_expon = decay_factor ** (timestep / max_timestep)
-                epsilon_next_t = r_expon * cur_epsilon
-                return max(epsilon_next_t, epsilon_min) # constant after reaching epsilon_min
-            return epsilon_min
+                current_t = args[0]
+                max_t = args[1]
+                r_expon = self.epsilon_exponential_decay_factor ** (current_t / max_t)
+                epsilon_next_t = r_expon * self.epsilon
+                if epsilon_next_t >= self.epsilon_min:
+                    return epsilon_next_t
+            # constant after reaching epsilon_min
+            return self.epsilon_min
+
 
         if self.epsilon_decay_strategy == "constant":
             pass
         elif self.epsilon_decay_strategy == "linear":
             # linear decay
-            self.epsilon = epsilon_linear_decay(
-                timestep, 
-                max_timestep, 
-                self.epsilon_start, 
-                self.epsilon_min, 
-                self.exploration_fraction,
-                self.epsilon
-            )
+            ### PUT YOUR CODE HERE ###
+            self.epsilon = epsilon_linear_decay(timestep, max_timestep)
         elif self.epsilon_decay_strategy == "exponential":
             # exponential decay
-            self.epsilon = epsilon_exponential_decay(
-                timestep,
-                max_timestep,
-                self.epsilon_min, 
-                self.epsilon_exponential_decay_factor,
-                self.epsilon
-            )
+            ### PUT YOUR CODE HERE ###
+            self.epsilon = epsilon_exponential_decay(timestep, max_timestep)
         else:
             raise ValueError("epsilon_decay_strategy must be either 'constant', 'linear' or 'exponential'")
 
@@ -269,8 +258,8 @@ class DQN(Agent):
         :param explore (bool): flag indicating whether we should explore
         :return (sample from self.action_space): action the agent should perform
         """
-
         ### PUT YOUR CODE HERE ###
+        #print("ACT")
         if explore and np.random.rand() < self.epsilon:    #using numpy
             # Random action (exploration)
             action = self.action_space.sample()
@@ -295,55 +284,44 @@ class DQN(Agent):
         :param batch (Transition): batch vector from replay buffer
         :return (Dict[str, float]): dictionary mapping from loss names to loss values
         """
-        # Unpack the batch
-        states, actions, next_states, rewards, dones = batch
-        
-        # Convert actions to long tensor for gathering
-        actions = actions.long()
-
-        # Calculate current Q-values
-         ### PUT YOUR CODE HERE ###
-        rewards = rewards.view(64)
-        dones = dones.view(64)
-        q_values = self.critics_net(states).gather(1, actions.view(-1, 1)).squeeze(-1)
-
-        # Calculate target Q-values
+        ### PUT YOUR CODE HERE ###
+        states = batch.states
+        actions = batch.actions.long()
+        next_states = batch.next_states
+        rewards = batch.rewards.view(64)
+        done = batch.done.view(64)
+        # Get target Q-values for the next states using the target network
         with torch.no_grad():
-            # Get max Q-value for next state from target network
-            ### PUT YOUR CODE HERE ###
             next_q_values = self.critics_target(next_states)
-            max_q_value = torch.max(next_q_values, dim=1)[0]
-            # Calculate target Q-value using Bellman equation
-            ### PUT YOUR CODE HERE ###
-            targets = rewards + (1 - dones) * self.gamma * max_q_value
-        
-        # Calculate loss (Mean Squared Error)
-        ### PUT YOUR CODE HERE ###
-        q_loss = torch.nn.functional.mse_loss(q_values, targets)
-        
-        # Optimize the critic network
-        ### PUT YOUR CODE HERE ###
-        # Backpropagation
-        self.critics_optim.zero_grad()  # Reset previous gradients to 0
-        q_loss.backward()  # Backpropagate the loss
-        self.critics_optim.step()  # Gradient descent step (updates the parameters)
+        targets = rewards + (1 - done) * self.gamma * torch.max(next_q_values, dim=1)[0]
 
-        # Update target network if it's time
-        self.update_counter += 1
+
+        # Get Q-values for the current states and the actions taken using the main network
+        q_values = self.critics_net(states).gather(1, actions.view(-1, 1)).squeeze(-1)
+        # Compute the loss
+        q_loss = torch.nn.functional.mse_loss(q_values, targets)
+        # Backpropagation
+        self.critics_optim.zero_grad()    # Reset previous gradients to 0
+        q_loss.backward()                 # Backpropagate the loss
+        self.critics_optim.step()         # Gradient descent step (updates the parameters)
+
+        # Update the target network
         if self.update_counter % self.target_update_freq == 0:
-            ### PUT YOUR CODE HERE ###
             self.critics_target.hard_update(self.critics_net)
 
+        # Increment the update counter
+        self.update_counter += 1
+        q_loss = q_loss.item()
 
-        return {"q_loss": q_loss.item()} # item() turns a one-element tensor into a standard python number
+        return {"q_loss": q_loss}
 
 
 class DiscreteRL(Agent):
     """The DiscreteRL Agent for Ex 3 using tabular Q-Learning without neural networks
-    
+
     This agent implements standard Q-learning with a discretized state space for
     environments with continuous state spaces. Suitable for small state-action spaces.
-    
+
     :attr gamma (float): discount factor for future rewards
     :attr epsilon (float): probability of choosing a random action for exploration
     :attr alpha (float): learning rate for Q-value updates
@@ -357,13 +335,13 @@ class DiscreteRL(Agent):
     """
 
     def __init__(
-        self,
-        action_space: gym.Space,
-        observation_space: gym.Space,
-        gamma: float = 0.99,
-        epsilon: float = 0.99,
-        alpha: float = 0.05,
-        **kwargs
+            self,
+            action_space: gym.Space,
+            observation_space: gym.Space,
+            gamma: float = 0.99,
+            epsilon: float = 0.99,
+            alpha: float = 0.05,
+            **kwargs
     ):
         """Constructor of DiscreteRL agent
 
@@ -377,9 +355,9 @@ class DiscreteRL(Agent):
         self.epsilon: float = epsilon
         self.alpha: float = alpha
         self.n_acts: int = action_space.n
-        
+
         super().__init__(action_space=action_space, observation_space=observation_space)
-        
+
         # Initialize Q-table as defaultdict with default value of 0 for any new state-action pair
         # This avoids having to initialize all possible state-action pairs explicitly
         self.q_table: DefaultDict = defaultdict(lambda: 0)
@@ -402,14 +380,15 @@ class DiscreteRL(Agent):
         """
         # Convert continuous position to discrete bin index
         position_idx = np.digitize(obs[0], self.position_bins) - 1
-        
+
         # Convert continuous velocity to discrete bin index
         velocity_idx = np.digitize(obs[1], self.velocity_bins) - 1
-        
+
         # Create a unique integer ID by combining position and velocity indices
         # This creates a unique ID for each discretized state using a simple hash function
         unique_state_id = position_idx * len(self.velocity_bins) + velocity_idx
         return unique_state_id
+
 
     def act(self, obs: np.ndarray, explore: bool = True) -> int:
         """Returns an action using epsilon-greedy action selection.
@@ -434,7 +413,7 @@ class DiscreteRL(Agent):
             return np.random.choice(np.flatnonzero(q_values == np.max(q_values)))
 
     def update(
-        self, obs: np.ndarray, action: int, reward: float, n_obs: np.ndarray, done: bool
+            self, obs: np.ndarray, action: int, reward: float, n_obs: np.ndarray, done: bool
     ) -> float:
         """Updates the Q-table based on agent experience using Q-learning algorithm.
 
@@ -451,10 +430,9 @@ class DiscreteRL(Agent):
         :return (float): updated Q-value for current observation-action pair
         """
 
-
         # Convert continuous observations to discrete state identifiers
-        state = self.discretize_state(obs)         # Current state
-        next_state = self.discretize_state(n_obs)   # Next state
+        state = self.discretize_state(obs)  # Current state
+        next_state = self.discretize_state(n_obs)  # Next state
 
         ### PUT YOUR CODE HERE ###
         q_old = self.q_table[(state, action)]
@@ -462,8 +440,7 @@ class DiscreteRL(Agent):
         self.q_table[(state, action)] = q_old + self.alpha * (reward + self.gamma * q_max - q_old)
         return self.q_table[(state, action)]
 
-        return {f"Q_value_{state}" : self.q_table[(state, action)]}
-
+        return {f"Q_value_{state}": self.q_table[(state, action)]}
 
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
         """Updates the hyperparameters (specifically epsilon for exploration).
