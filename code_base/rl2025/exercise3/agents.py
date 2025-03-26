@@ -362,7 +362,7 @@ class DiscreteRL(Agent):
         observation_space: gym.Space,
         gamma: float = 0.99,
         epsilon: float = 0.99,
-        alpha: float = 0.05,
+        learning_rate: float = 0.02,    #changed to learning_rate to match name in config, otherwise it isn't used
         **kwargs
     ):
         """Constructor of DiscreteRL agent
@@ -375,7 +375,7 @@ class DiscreteRL(Agent):
         """
         self.gamma: float = gamma
         self.epsilon: float = epsilon
-        self.alpha: float = alpha
+        self.alpha: float = learning_rate
         self.n_acts: int = action_space.n
         
         super().__init__(action_space=action_space, observation_space=observation_space)
