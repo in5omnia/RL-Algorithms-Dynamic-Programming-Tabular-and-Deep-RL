@@ -458,9 +458,11 @@ class DiscreteRL(Agent):
 
         ### PUT YOUR CODE HERE ###
         q_old = self.q_table[(state, action)]
-        q_max = max([self.q_table[(next_state, a)] for a in range(self.n_acts)])
+        if done:    #if terminal state (or truncated), don't look ahead
+            q_max = 0
+        else:
+            q_max = max([self.q_table[(next_state, a)] for a in range(self.n_acts)])
         self.q_table[(state, action)] = q_old + self.alpha * (reward + self.gamma * q_max - q_old)
-        return self.q_table[(state, action)]
 
         return {f"Q_value_{state}" : self.q_table[(state, action)]}
 
