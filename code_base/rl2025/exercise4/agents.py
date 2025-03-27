@@ -182,8 +182,6 @@ class DDPG(Agent):
         obs_tensor = torch.tensor(obs, dtype=torch.float32)  # Convert obs to tensor
         with torch.no_grad():
             action = self.actor(obs_tensor)
-        #print(f"obs tensor {obs_tensor} with size {obs_tensor.size()}")
-        #print(f"action in act(): {action} with size {action.size()}")
 
         # Exploratory action selection
         if explore:
