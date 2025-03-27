@@ -53,7 +53,7 @@ def question2_4() -> str:
     by [Q-learning / Every-Visit Monte Carlo] when compared to the other algorithm.
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = "BECAUSE OF ALPHA? ALPHA REDUCES GAMMA IN Q-LEARNING THEREFORE REDUCING ITS EFFECT?"  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 def question2_5() -> str:
@@ -80,7 +80,11 @@ def question3_1() -> str:
     c) 2e-4
     return: (str): your answer as a string. accepted strings: "a", "b" or "c"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b" or "c"
+    # Mean over 11 runs:
+    # for lr = 2e-2: -181.825272727
+    # for lr = 2e-3: -179.813181818
+    # for lr = 2e-4: -180.677181818
+    answer = "a"  # TYPE YOUR ANSWER HERE "a", "b" or "c"
     return answer
 
 
@@ -94,7 +98,7 @@ def question3_2() -> str:
     c) 0.01
     return: (str): your answer as a string. accepted strings: "a", "b" or "c"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b" or "c"
+    answer = "c"  # TYPE YOUR ANSWER HERE "a", "b" or "c"
     return answer
 
 
@@ -108,7 +112,7 @@ def question3_3() -> str:
     c) 1e-5
     return: (str): your answer as a string. accepted strings: "a", "b" or "c"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b" or "c"
+    answer = "b"  # TYPE YOUR ANSWER HERE "a", "b" or "c"
     return answer
 
 
@@ -124,14 +128,14 @@ def question3_4() -> str:
     e) it depends on the number of training timesteps
     return: (str): your answer as a string. accepted strings: "a", "b", "c", "d" or "e"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
+    answer = "b"  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
     return answer
 
 
 def question3_5() -> str:
     """
     (Multiple choice question):
-    What would the value of epsilon be at the end of  training when employing an exponential decay strategy
+    What would the value of epsilon be at the end of training when employing an exponential decay strategy
     with epsilon decay set to 0.95?
     a) 0.95
     b) 1.0
@@ -140,7 +144,7 @@ def question3_5() -> str:
     e) it depends on the number of training timesteps
     return: (str): your answer as a string. accepted strings: "a", "b", "c", "d" or "e"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
+    answer = "c"  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
     return answer
 
 
@@ -153,7 +157,7 @@ def question3_6() -> str:
     strategy you implemented).
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "The exploration fraction defines the percentage of training progress at which exploration should reach its minimum, making it relative to the environment’s episode count. This ensures a predictable and consistent reduction in exploration, that adapts to different environments. Meanwhile, exponential decay, which reduces epsilon at a fixed rate, can lead to issues: it can drop exploration too quickly, limiting learning, or too slowly, making training inefficient. Since a decay strategy based on the exploration fraction ties exploration directly to training progress, offering greater adaptability, it may be more generally applicable across different environments."  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 
@@ -164,7 +168,7 @@ def question3_7() -> str:
     (where we usually see a fairly steady decrease of the loss throughout training)
     return: answer (str): your answer as a string (150 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (150 words max)
+    answer = "In supervised learning, models are trained on static, labelled datasets, facilitating convergence and a steady decrease in loss. In contrast, DQN faces a dynamic data distribution. As the agent learns, it generates new experiences that alter the data sampled for training. Target values also shift due to updates in the target network. Furthermore, the replay buffer, from which experiences are sampled for each network update, introduces variability as different subsets are used. This combination of newly generated experiences, non-stationary targets, and random sampling contributes to training instability, reflected in a highly fluctuating loss. Moreover, as training progresses, the agent encounters novel high-reward state-action pairs, initially associated with low Q-values, and suboptimal pairs, previously deemed as optimal. This leads to substantial variations in the Q-values associated with these pairs, contributing to an overall increase in loss during training."  # TYPE YOUR ANSWER HERE (150 words max)
     return answer
 
 
@@ -175,7 +179,7 @@ def question3_8() -> str:
     the DQN training process.
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "The spikes are observed at precise intervals of 2000 timesteps, matching the target network’s update frequency. Each update, where the target network's parameters are synchronized with the primary Q-network, causes an abrupt shift in the target Q-value distribution. The primary network, trained to predict values based on the previous target network's outputs, cannot immediately adapt to these changes. This leads to a temporary increase in MSE loss, observed as spikes, when the predicted Q-values deviate from the newly updated targets. Over time, the primary network readjusts to match the new target distribution, reducing the loss until the next update."  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 
