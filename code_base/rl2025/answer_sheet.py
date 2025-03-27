@@ -179,7 +179,7 @@ def question3_8() -> str:
     the DQN training process.
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = "The spikes are observed at precise intervals of 2000 timesteps, matching the target network’s update frequency. Each update, where the target network's parameters are synchronized with the primary Q-network, causes an abrupt shift in the target Q-value distribution. The primary network, trained to predict values based on the previous target network's outputs, cannot immediately adapt to these changes. This leads to a temporary increase in MSE loss, observed as spikes, when the predicted Q-values deviate from the newly updated targets. Over time, the primary network readjusts to match the new target distribution, reducing the loss until the next update."  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "The target network's update frequency is 2000, which is the timestep intervals at which the spikes occur. In each update, the target network's parameters are synchronised with the primary Q-network, causing an abrupt shift in the target Q-value distribution. The primary network, trained to predict values based on the previous target network's outputs, cannot immediately adapt to these changes. This causes the MSE loss to temporarily increase, generating the spikes, when the predicted Q-values deviate from the newly updated targets. Over time, the primary network is trained to match the new target distribution, reducing the loss until the next update."  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 
