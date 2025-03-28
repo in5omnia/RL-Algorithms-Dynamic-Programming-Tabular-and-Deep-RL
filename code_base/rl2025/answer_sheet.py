@@ -63,7 +63,7 @@ def question2_5() -> str:
     by [Q-learning / Every-Visit Monte Carlo].
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "In the non-slippery variant, the agent always moves in the intended direction, making the movement deterministic and leading to faster convergence to an optimal policy. In the slippery variant, movement is stochastic, with the agent moving in the intended direction only 1/3 of the time. The increased uncertainty requires learning a more adaptable policy and increased exploration. Since Every-Visit Monte Carlo relies on full episode returns, the increased trajectory variability in the slippery variant can slow convergence. Q-learning, with its step-by-step updates, may adapt more quickly by learning from each transition rather than waiting until the episode ends."  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 
