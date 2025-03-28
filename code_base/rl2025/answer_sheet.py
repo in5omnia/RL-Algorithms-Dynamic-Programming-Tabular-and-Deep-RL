@@ -53,7 +53,7 @@ def question2_4() -> str:
     by [Q-learning / Every-Visit Monte Carlo] when compared to the other algorithm.
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "Every-Visit Monte Carlo evaluates complete trajectories and updates value estimates using the total return, the sum of rewards discounted over time, making it heavily influenced by gamma, the discount factor. Since in FrozenLake the reward is sparse and the episodes are long, reaching distant goals heavily depends on gamma. In contrast, Q-learning is less affected by gamma, because it incrementally updates Q-values based on one-step lookahead, bootstrapping from the next state’s estimated Q-value. Since it applies gamma once at each timestep, rather than to the full return, its effect is more gradual and further diluted by alpha."  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 def question2_5() -> str:
