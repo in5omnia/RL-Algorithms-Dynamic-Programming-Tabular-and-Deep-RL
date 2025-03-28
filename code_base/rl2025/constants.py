@@ -52,8 +52,8 @@ EX3_DQN_MOUNTAINCAR_CONSTANTS["algo"] = "DQN"
 EX4_RACETRACK_CONSTANTS = {
     "env": "racetrack-v0",
     "target_return": 500.0,
-    "episode_length": 31000,
-    "max_timesteps": 200,
+    "episode_length": 200,
+    "max_timesteps": 31000,
     "max_time": 120 * 60,
     "gamma": 0.95,
     "save_filename": "racetrack_latest.pt",
