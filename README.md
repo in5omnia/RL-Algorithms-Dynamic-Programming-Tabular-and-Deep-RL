@@ -5,7 +5,7 @@ The project covers implementations of reinforcement learning algorithms ranging 
 
 ---
 
-## 🚀 Project Overview
+## Project Overview
 
 The coursework was structured into four main exercises, each focusing on a different class of RL algorithms:
 
@@ -31,7 +31,7 @@ The coursework was structured into four main exercises, each focusing on a diffe
 
 ---
 
-## 🗂 Repository Structure
+## Repository Structure
 
 ```text
 rl2025/
